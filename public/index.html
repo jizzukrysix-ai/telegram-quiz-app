@@ -31,7 +31,7 @@
         }
         h2 { margin-top: 0; color: var(--tg-theme-text-color, #333); }
         .score-board { font-size: 18px; font-weight: bold; margin-bottom: 20px; color: var(--tg-theme-hint-color, #0088cc); }
-        .question-box { font-size: 16px; margin-bottom: 20px; font-weight: 500; }
+        .question-box { font-size: 16px; margin-bottom: 20px; font-weight: 500; min-height: 50px; }
         .option-btn {
             background-color: var(--tg-theme-button-color, #2481cc);
             color: var(--tg-theme-button-text-color, #ffffff);
@@ -57,6 +57,10 @@
             cursor: pointer;
             font-weight: bold;
         }
+        .ad-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -73,12 +77,15 @@
         <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
 
         <!-- AdsGram Rewarded Ad (Rule Compliant: Optional for user) -->
-        <button class="ad-btn" onclick="showRewardedAd()">🎁 Watch Ad (+50 Bonus Pts)</button>
+        <button id="adBtn" class="ad-btn" onclick="showRewardedAd()">🎁 Watch Ad (+50 Bonus Pts)</button>
     </div>
 
     <script>
+        // Initialize Telegram WebApp safely
         const tg = window.Telegram.WebApp;
-        tg.expand();
+        if (tg && tg.expand) {
+            tg.expand();
+        }
 
         let score = 0;
         let currentQuestion = 0;
@@ -103,10 +110,10 @@
 
         function loadQuiz() {
             if (currentQuestion >= quizData.length) {
-                currentQuestion = 0;
+                currentQuestion = 0; // Loop quiz smoothly
             }
             const q = quizData[currentQuestion];
-            document.getElementById("questionText").innerText = q.q;
+            document.getElementById("questionTextenerText") || (document.getElementById("questionText").innerText = q.q);
             
             const optionsDiv = document.getElementById("optionsContainer");
             optionsDiv.innerHTML = "";
@@ -132,11 +139,28 @@
             loadQuiz();
         }
 
-        // AdsGram Integration (Replace with your actual Block ID from Adsgram dashboard)
-        const AdController = window.Adsgram.init({ blockId: "YOUR_ADSGRAM_BLOCK_ID" });
+        // Safe Adsgram Initialization with Error Handling
+        let AdController = null;
+        try {
+            if (window.Adsgram) {
+                // Replace "YOUR_ADSGRAM_BLOCK_ID" with your actual Block ID from Adsgram dashboard
+                AdController = window.Adsgram.init({ blockId: "YOUR_ADSGRAM_BLOCK_ID" });
+            }
+        } catch (e) {
+            console.error("Adsgram init error:", e);
+        }
 
         async function showRewardedAd() {
+            if (!AdController) {
+                alert("Ads are currently unavailable. Please try again later.");
+                return;
+            }
+            
             try {
+                const adBtn = document.getElementById("adBtn");
+                adBtn.disabled = true;
+                adBtn.innerText = "Loading Ad...";
+
                 const result = await AdController.show();
                 if (result.done) {
                     score += 50;
@@ -144,11 +168,16 @@
                     alert("Awesome! You earned 50 bonus points.");
                 }
             } catch (err) {
-                console.error("Ad error:", err);
+                console.error("Ad error or closed early:", err);
                 alert("Ad was closed or failed to load.");
+            } finally {
+                const adBtn = document.getElementById("adBtn");
+                adBtn.disabled = false;
+                adBtn.innerText = "🎁 Watch Ad (+50 Bonus Pts)";
             }
         }
 
+        // Start the quiz on load
         loadQuiz();
     </script>
 </body>
