@@ -1,1 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Pro Quiz App</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Adsgram SDK -->
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #f5f7fa);
+            color: var(--tg-theme-text-color, #222);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .card {
+            max-width: 400px;
+            width: 100%;
+            background: var(--tg-theme-secondary-bg-color, #ffffff);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+            text-align: center;
+        }
+        h2 { margin-top: 0; color: var(--tg-theme-text-color, #333); }
+        .score-board { font-size: 18px; font-weight: bold; margin-bottom: 20px; color: var(--tg-theme-hint-color, #0088cc); }
+        .question-box { font-size: 16px; margin-bottom: 20px; font-weight: 500; }
+        .option-btn {
+            background-color: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 12px;
+            margin: 8px 0;
+            width: 100%;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .option-btn:active { opacity: 0.7; }
+        .ad-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px;
+            margin-top: 15px;
+            width: 100%;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
 
+    <div class="card">
+        <h2>🧠 Smart Quiz Challenge</h2>
+        <div class="score-board">Score: <span id="score">0</span> Points</div>
+        
+        <div id="quizContainer">
+            <div class="question-box" id="questionText">Loading question...</div>
+            <div id="optionsContainer"></div>
+        </div>
+
+        <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
+
+        <!-- AdsGram Rewarded Ad (Rule Compliant: Optional for user) -->
+        <button class="ad-btn" onclick="showRewardedAd()">🎁 Watch Ad (+50 Bonus Pts)</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let score = 0;
+        let currentQuestion = 0;
+
+        const quizData = [
+            {
+                q: "What is the primary programming language for web browsers?",
+                options: ["Python", "C++", "JavaScript", "Java"],
+                answer: 2
+            },
+            {
+                q: "Which company created the Telegram messenger?",
+                options: ["Pavel Durov", "Meta", "Google", "Microsoft"],
+                answer: 0
+            },
+            {
+                q: "What does HTML stand for?",
+                options: ["Hyper Text Markup Language", "High Tech Multi Language", "Hyperlinks Text Management", "Home Tool Markup Language"],
+                answer: 0
+            }
+        ];
+
+        function loadQuiz() {
+            if (currentQuestion >= quizData.length) {
+                currentQuestion = 0;
+            }
+            const q = quizData[currentQuestion];
+            document.getElementById("questionText").innerText = q.q;
+            
+            const optionsDiv = document.getElementById("optionsContainer");
+            optionsDiv.innerHTML = "";
+            
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement("button");
+                btn.className = "option-btn";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index, q.answer);
+                optionsDiv.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected, correct) {
+            if (selected === correct) {
+                score += 10;
+                alert("Correct! +10 Points");
+            } else {
+                alert("Wrong Answer!");
+            }
+            document.getElementById("score").innerText = score;
+            currentQuestion++;
+            loadQuiz();
+        }
+
+        // AdsGram Integration (Replace with your actual Block ID from Adsgram dashboard)
+        const AdController = window.Adsgram.init({ blockId: "YOUR_ADSGRAM_BLOCK_ID" });
+
+        async function showRewardedAd() {
+            try {
+                const result = await AdController.show();
+                if (result.done) {
+                    score += 50;
+                    document.getElementById("score").innerText = score;
+                    alert("Awesome! You earned 50 bonus points.");
+                }
+            } catch (err) {
+                console.error("Ad error:", err);
+                alert("Ad was closed or failed to load.");
+            }
+        }
+
+        loadQuiz();
+    </script>
+</body>
+</html>
